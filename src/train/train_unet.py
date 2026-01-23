@@ -10,15 +10,17 @@ from src.utils.concat_inputs import concat_image_and_masks
 from src.models.oneformer_wrapper import OneFormerWrapper
 from src.utils.region_masks import build_region_masks
 
-
 from src.utils.metrics import psnr, ssim
 
 # -------- config --------
+
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-EPOCHS = 5
-BATCH_SIZE = 2
-LR = 1e-3
+
+EPOCHS = 50
+BATCH_SIZE = 4
+LR = 1e-4
 IMG_SIZE = (512, 512)
+
 CKPT_DIR = "outputs/checkpoints"
 os.makedirs(CKPT_DIR, exist_ok=True)
 
@@ -83,6 +85,9 @@ for epoch in range(1, EPOCHS + 1):
     # -------- val --------
     model.eval()
     val_loss = 0.0
+    val_psnr = 0.0
+    val_ssim = 0.0
+
     with torch.no_grad():
         for inp_img, tgt_img in val_dl:
             inp_img = inp_img.to(DEVICE)
@@ -93,34 +98,35 @@ for epoch in range(1, EPOCHS + 1):
                 pil = T.ToPILImage()(inp_img[i].cpu())
                 seg = segmenter.predict(pil)
                 id2label = segmenter.model.config.id2label
-                masks = build_region_masks(
-                    seg, id2label, SEMANTIC_GROUPS)
+                masks = build_region_masks(seg, id2label, SEMANTIC_GROUPS)
                 x = concat_image_and_masks(inp_img[i], masks)
                 inputs.append(x)
 
             x = torch.stack(inputs).to(DEVICE)
             out = model(x)
+
             _, _, h, w = out.shape
-            val_loss += loss_fn(out, tgt_img[:, :, :h, :w]).item()
-            p = psnr(out, tgt_img[:, :, :h, :w]).item()
-            s = ssim(out, tgt_img[:, :, :h, :w]).item()
+            tgt_c = tgt_img[:, :, :h, :w]
 
-            val_psnr += p
-            val_ssim += s
+            loss = loss_fn(out, tgt_c)
+            val_loss += loss.item()
 
-            val_psnr = 0.0
-            val_ssim = 0.0
-            val_psnr /= max(1, len(val_dl))
-            val_ssim /= max(1, len(val_dl))
-            print(
-                f"Epoch {epoch}: "
-                f"train={train_loss:.4f}, "
-                f"val={val_loss:.4f}, "
-                f"PSNR={val_psnr:.2f}, "
-                f"SSIM={val_ssim:.4f}"
-            )
+            val_psnr += psnr(out, tgt_c).item()
+            val_ssim += ssim(out, tgt_c).item()
+
+    # ⬅️ AFTER the loop (this is key)
+    val_loss /= max(1, len(val_dl))
+    val_psnr /= max(1, len(val_dl))
+    val_ssim /= max(1, len(val_dl))
+
+    print(
+        f"Epoch {epoch}: "
+        f"train={train_loss:.4f}, "
+        f"val={val_loss:.4f}, "
+        f"PSNR={val_psnr:.2f}, "
+        f"SSIM={val_ssim:.4f}"
+    )
 
     val_loss /= max(1, len(val_dl))
 
     torch.save(model.state_dict(), f"{CKPT_DIR}/unet_epoch_{epoch}.pt")
-    print(f"Epoch {epoch}: train={train_loss:.4f}, val={val_loss:.4f}")
