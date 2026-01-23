@@ -7,8 +7,9 @@ from tqdm import tqdm
 from src.models.oneformer_wrapper import OneFormerWrapper
 from src.utils.region_masks import build_region_masks
 
+# ---------------- config ----------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-print("using device", DEVICE)
+print("Using device:", DEVICE)
 
 SEMANTIC_GROUPS = {
     "human": ["person"],
@@ -16,22 +17,36 @@ SEMANTIC_GROUPS = {
     "structure": ["wall", "building"],
 }
 
-IMG_DIR = "data/train/input"
-OUT_DIR = "/content/drive/MyDrive/oneformer_masks/train"
-os.makedirs(OUT_DIR, exist_ok=True)
+SPLITS = {
+    "train": "data/train/input",
+    "val":   "data/val/input",
+}
 
+BASE_OUT = "/content/drive/MyDrive/oneformer_masks"
+
+# ---------------- model ----------------
 segmenter = OneFormerWrapper(device=DEVICE)
 id2label = segmenter.model.config.id2label
 
-for fname in tqdm(os.listdir(IMG_DIR)):
-    if not fname.lower().endswith((".png", ".jpg", ".jpeg")):
-        continue
+# ---------------- run ----------------
+for split, img_dir in SPLITS.items():
+    out_dir = os.path.join(BASE_OUT, split)
+    os.makedirs(out_dir, exist_ok=True)
 
-    img = Image.open(os.path.join(IMG_DIR, fname)).convert("RGB")
-    seg = segmenter.predict(img)
+    print(f"\nPrecomputing masks for {split} set...")
+    for fname in tqdm(os.listdir(img_dir)):
+        if not fname.lower().endswith((".png", ".jpg", ".jpeg")):
+            continue
 
-    masks = build_region_masks(seg, id2label, SEMANTIC_GROUPS)
-    stacked = np.stack([m.cpu().numpy() for m in masks.values()], axis=0)
+        img = Image.open(os.path.join(img_dir, fname)).convert("RGB")
+        seg = segmenter.predict(img)
 
-    np.save(os.path.join(OUT_DIR, os.path.splitext(
-        fname)[0] + ".npy"), stacked)
+        masks = build_region_masks(seg, id2label, SEMANTIC_GROUPS)
+        stacked = np.stack([m.cpu().numpy() for m in masks.values()], axis=0)
+
+        np.save(
+            os.path.join(out_dir, fname + ".npy"),
+            stacked
+        )
+
+print("\nMask precomputation complete.")
