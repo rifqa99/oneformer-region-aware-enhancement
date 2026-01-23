@@ -1,11 +1,5 @@
 import torch
 import torch.nn as nn
-from src.utils.metrics import psnr, ssim
-
-EPOCHS = 50
-BATCH_SIZE = 4
-LR = 1e-4
-IMG_SIZE = (512, 512)
 
 
 def center_crop(tensor, target):
@@ -58,13 +52,3 @@ class UNet(nn.Module):
         u1 = self.conv1(torch.cat([u1, d1_c], dim=1))
 
         return self.out(u1)
-
-
-p = psnr(out, tgt_img[:, :, :h, :w]).item()
-s = ssim(out, tgt_img[:, :, :h, :w]).item()
-val_psnr += p
-val_ssim += s
-val_psnr, val_ssim = 0.0, 0.0
-val_psnr /= max(1, len(val_dl))
-val_ssim /= max(1, len(val_dl))
-print(f"Epoch {epoch}: train={train_loss:.4f}, val={val_loss:.4f}, PSNR={val_psnr:.2f}, SSIM={val_ssim:.4f}")
