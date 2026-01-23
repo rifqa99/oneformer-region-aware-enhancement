@@ -32,9 +32,21 @@ SEMANTIC_GROUPS = {
 
 # -------- data --------
 train_ds = PairedImageDataset(
-    "data/train/input", "data/train/target", size=IMG_SIZE)
+    "data/train/input",
+    "data/train/target",
+    "data/train/masks",
+    size=IMG_SIZE
+)
+
+x, y = train_ds[0]
+print(x.shape)  # should be [6, H, W]
+
 val_ds = PairedImageDataset(
-    "data/val/input",   "data/val/target",   size=IMG_SIZE)
+    "data/val/input",
+    "data/val/target",
+    "data/val/masks",
+    size=IMG_SIZE
+)
 
 train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
 val_dl = DataLoader(val_ds,   batch_size=BATCH_SIZE, shuffle=False)

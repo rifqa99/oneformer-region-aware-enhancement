@@ -5,7 +5,8 @@ import torchvision.transforms as T
 
 
 class PairedImageDataset(Dataset):
-    def __init__(self, input_dir, target_dir, size=None):
+    def __init__(self, input_dir, target_dir, mask_dir, size=None):
+        self.mask_dir = mask_dir
         self.input_dir = input_dir
         self.target_dir = target_dir
         self.files = sorted(os.listdir(input_dir))
@@ -20,9 +21,14 @@ class PairedImageDataset(Dataset):
 
         inp = Image.open(os.path.join(self.input_dir, name)).convert("RGB")
         tgt = Image.open(os.path.join(self.target_dir, name)).convert("RGB")
+        mask_path = os.path.join(self.mask_dir, name.replace(".jpg", ".npy"))
+        masks = np.load(mask_path)                 # (3, H, W)
+        masks = torch.from_numpy(masks).float()
 
         if self.size:
             inp = inp.resize(self.size)
             tgt = tgt.resize(self.size)
 
-        return self.transform(inp), self.transform(tgt)
+        img = self.transform(inp)
+        x = torch.cat([img, masks], dim=0)   # (6, H, W)
+        return x, self.transform(tgt)
