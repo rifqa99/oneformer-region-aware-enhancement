@@ -27,13 +27,19 @@ class PairedImageDataset(Dataset):
             self.mask_dir,
             os.path.splitext(name)[0] + ".npy"
         )
-        masks = np.load(mask_path)                 # (3, H, W)
+
+        masks = np.load(mask_path)
         masks = torch.from_numpy(masks).float()
 
         if self.size:
             inp = inp.resize(self.size)
             tgt = tgt.resize(self.size)
+            masks = torch.nn.functional.interpolate(
+                masks.unsqueeze(0),
+                size=self.size,
+                mode="nearest"
+            ).squeeze(0)
 
         img = self.transform(inp)
-        x = torch.cat([img, masks], dim=0)   # (6, H, W)
+        x = torch.cat([img, masks], dim=0)
         return x, self.transform(tgt)
