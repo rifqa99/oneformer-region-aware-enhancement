@@ -1,9 +1,11 @@
 import torch
 import torch.nn.functional as F
 
+
 def psnr(pred, target, max_val=1.0):
     mse = F.mse_loss(pred, target)
     return 20 * torch.log10(max_val / torch.sqrt(mse + 1e-8))
+
 
 def ssim(pred, target):
     C1 = 0.01 ** 2
