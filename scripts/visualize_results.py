@@ -9,7 +9,7 @@ from src.datasets.paired_dataset import PairedImageDataset
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # paths
-CKPT = "outputs/checkpoints/unet_epoch_20.pt"
+CKPT = "/content/drive/MyDrive/checkpoints/unet_epoch_20.pt"
 OUT_DIR = "outputs/visuals"
 os.makedirs(OUT_DIR, exist_ok=True)
 

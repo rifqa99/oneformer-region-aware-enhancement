@@ -15,8 +15,9 @@ BATCH_SIZE = 4
 LR = 1e-4
 IMG_SIZE = (512, 512)
 
-CKPT_DIR = "outputs/checkpoints"
+CKPT_DIR = "/content/drive/MyDrive/checkpoints"
 os.makedirs(CKPT_DIR, exist_ok=True)
+
 
 # ---------------- data ----------------
 train_ds = PairedImageDataset(
