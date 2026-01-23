@@ -34,7 +34,7 @@ SEMANTIC_GROUPS = {
 train_ds = PairedImageDataset(
     "data/train/input",
     "data/train/target",
-    "data/train/masks",
+    "/content/drive/MyDrive/oneformer_masks/train",
     size=IMG_SIZE
 )
 

@@ -8,6 +8,7 @@ from src.models.oneformer_wrapper import OneFormerWrapper
 from src.utils.region_masks import build_region_masks
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+print("using device", DEVICE)
 
 SEMANTIC_GROUPS = {
     "human": ["person"],
@@ -16,7 +17,7 @@ SEMANTIC_GROUPS = {
 }
 
 IMG_DIR = "data/train/input"
-OUT_DIR = "data/train/masks"
+OUT_DIR = "/content/drive/MyDrive/oneformer_masks/train"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 segmenter = OneFormerWrapper(device=DEVICE)
