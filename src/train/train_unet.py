@@ -7,6 +7,8 @@ from src.models.unet import UNet
 from src.datasets.paired_dataset import PairedImageDataset
 from src.utils.metrics import psnr, ssim
 
+from src.utils.perceptual_loss import VGGPerceptualLoss
+
 # ---------------- config ----------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -46,7 +48,12 @@ print("Val samples:", len(val_ds))
 model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
-loss_fn = nn.L1Loss()
+l1_loss = nn.L1Loss()
+perc_loss = VGGPerceptualLoss(device=DEVICE)
+LAMBDA_PERC = 0.1
+loss_l1 = l1_loss(out, y)
+loss_perc = perc_loss(out, y)
+loss = loss_l1 + LAMBDA_PERC * loss_perc
 
 # ---------------- training ----------------
 for epoch in range(1, EPOCHS + 1):
