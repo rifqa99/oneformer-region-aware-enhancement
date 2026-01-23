@@ -10,6 +10,9 @@ from src.utils.concat_inputs import concat_image_and_masks
 from src.models.oneformer_wrapper import OneFormerWrapper
 from src.utils.region_masks import build_region_masks
 
+
+from src.utils.metrics import psnr, ssim
+
 # -------- config --------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 EPOCHS = 5
@@ -99,6 +102,23 @@ for epoch in range(1, EPOCHS + 1):
             out = model(x)
             _, _, h, w = out.shape
             val_loss += loss_fn(out, tgt_img[:, :, :h, :w]).item()
+            p = psnr(out, tgt_img[:, :, :h, :w]).item()
+            s = ssim(out, tgt_img[:, :, :h, :w]).item()
+
+            val_psnr += p
+            val_ssim += s
+
+            val_psnr = 0.0
+            val_ssim = 0.0
+            val_psnr /= max(1, len(val_dl))
+            val_ssim /= max(1, len(val_dl))
+            print(
+                f"Epoch {epoch}: "
+                f"train={train_loss:.4f}, "
+                f"val={val_loss:.4f}, "
+                f"PSNR={val_psnr:.2f}, "
+                f"SSIM={val_ssim:.4f}"
+            )
 
     val_loss /= max(1, len(val_dl))
 
