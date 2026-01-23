@@ -44,9 +44,8 @@ for split, img_dir in SPLITS.items():
         masks = build_region_masks(seg, id2label, SEMANTIC_GROUPS)
         stacked = np.stack([m.cpu().numpy() for m in masks.values()], axis=0)
 
-        np.save(
-            os.path.join(out_dir, fname + ".npy"),
-            stacked
-        )
+        np.save(os.path.join(out_dir, os.path.splitext(
+            fname)[0] + ".npy"), stacked)
+
 
 print("\nMask precomputation complete.")
