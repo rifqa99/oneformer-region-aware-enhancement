@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader
 from src.models.unet import UNet
 from src.datasets.paired_dataset import PairedImageDataset
 from src.utils.metrics import psnr, ssim
-
 from src.utils.perceptual_loss import VGGPerceptualLoss
 
 # ---------------- config ----------------
@@ -20,6 +19,7 @@ IMG_SIZE = (512, 512)
 CKPT_DIR = "/content/drive/MyDrive/checkpoints"
 os.makedirs(CKPT_DIR, exist_ok=True)
 
+LAMBDA_PERC = 0.1
 
 # ---------------- data ----------------
 train_ds = PairedImageDataset(
@@ -50,10 +50,6 @@ model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 l1_loss = nn.L1Loss()
 perc_loss = VGGPerceptualLoss(device=DEVICE)
-LAMBDA_PERC = 0.1
-loss_l1 = l1_loss(out, y)
-loss_perc = perc_loss(out, y)
-loss = loss_l1 + LAMBDA_PERC * loss_perc
 
 # ---------------- training ----------------
 for epoch in range(1, EPOCHS + 1):
@@ -68,7 +64,11 @@ for epoch in range(1, EPOCHS + 1):
 
         optimizer.zero_grad()
         out = model(x)
-        loss = loss_fn(out, y)
+
+        loss_l1 = l1_loss(out, y)
+        loss_perc = perc_loss(out, y)
+        loss = loss_l1 + LAMBDA_PERC * loss_perc
+
         loss.backward()
         optimizer.step()
 
@@ -88,7 +88,10 @@ for epoch in range(1, EPOCHS + 1):
             y = y.to(DEVICE)
 
             out = model(x)
-            loss = loss_fn(out, y)
+
+            loss_l1 = l1_loss(out, y)
+            loss_perc = perc_loss(out, y)
+            loss = loss_l1 + LAMBDA_PERC * loss_perc
 
             val_loss += loss.item()
             val_psnr += psnr(out, y).item()
