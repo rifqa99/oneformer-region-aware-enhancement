@@ -8,7 +8,7 @@ from src.models.unet import UNet
 from src.datasets.paired_dataset import PairedImageDataset
 from src.utils.concat_inputs import concat_image_and_masks
 from src.models.oneformer_wrapper import OneFormerWrapper
-from src.utils.region_masks import build_region_masks_from_names
+from src.utils.region_masks import build_region_masks
 
 # -------- config --------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -57,7 +57,7 @@ for epoch in range(1, EPOCHS + 1):
             pil = T.ToPILImage()(inp_img[i].cpu())
             seg = segmenter.predict(pil)
             id2label = segmenter.model.config.id2label
-            masks = build_region_masks_from_names(
+            masks = build_region_masks(
                 seg, id2label, SEMANTIC_GROUPS)
             x = concat_image_and_masks(inp_img[i], masks)
             inputs.append(x)
@@ -90,7 +90,7 @@ for epoch in range(1, EPOCHS + 1):
                 pil = T.ToPILImage()(inp_img[i].cpu())
                 seg = segmenter.predict(pil)
                 id2label = segmenter.model.config.id2label
-                masks = build_region_masks_from_names(
+                masks = build_region_masks(
                     seg, id2label, SEMANTIC_GROUPS)
                 x = concat_image_and_masks(inp_img[i], masks)
                 inputs.append(x)
