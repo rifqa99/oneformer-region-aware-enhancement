@@ -1,3 +1,6 @@
+from src.datasets.paired_dataset import PairedImageDataset
+from torch.utils.data import DataLoader
+from src.models.unet import UNet
 from src.utils.concat_inputs import concat_image_and_masks
 import torchvision.transforms as T
 from src.utils.region_masks import build_region_masks
@@ -52,3 +55,34 @@ img_t = to_tensor(img)          # (3, H, W)
 # concatenate image and masks
 input_tensor = concat_image_and_masks(img_t, masks)
 print("Input shape:", input_tensor.shape)
+
+
+# Fake target (for smoke test only)
+target = img_t.unsqueeze(0)  # (1, 3, H, W)
+
+model_enh = UNet(in_channels=6, out_channels=3)
+optimizer = torch.optim.Adam(model_enh.parameters(), lr=1e-3)
+loss_fn = torch.nn.L1Loss()
+
+model_enh.train()
+inp = input_tensor.unsqueeze(0)  # (1, 6, H, W)
+out = model_enh(inp)
+_, _, h, w = out.shape
+target_c = target[:, :, :h, :w]
+loss = loss_fn(out, target_c)
+
+loss.backward()
+optimizer.step()
+
+print("Smoke loss:", loss.item())
+
+ds = PairedImageDataset(
+    "data/train/input",
+    "data/train/target",
+    size=(512, 512)
+)
+
+dl = DataLoader(ds, batch_size=2, shuffle=True)
+
+x, y = next(iter(dl))
+print(x.shape, y.shape)
