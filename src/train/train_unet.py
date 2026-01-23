@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import torch
 from torch import nn
@@ -18,6 +19,9 @@ IMG_SIZE = (512, 512)
 
 CKPT_DIR = "/content/drive/MyDrive/checkpoints"
 os.makedirs(CKPT_DIR, exist_ok=True)
+
+os.makedirs("/content/drive/MyDrive/oneformer/plots", exist_ok=True)
+
 
 LAMBDA_PERC = 0.1
 
@@ -50,6 +54,10 @@ model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 l1_loss = nn.L1Loss()
 perc_loss = VGGPerceptualLoss(device=DEVICE)
+
+# ---------------- for the graph -------------
+train_losses, val_losses = [], []
+val_psnrs, val_ssims = [], []
 
 # ---------------- training ----------------
 for epoch in range(1, EPOCHS + 1):
@@ -90,7 +98,7 @@ for epoch in range(1, EPOCHS + 1):
             out = model(x)
 
             loss_l1 = l1_loss(out, y)
-            loss_perc = perc_loss(out, y)
+            loss_perc = perc_loss(out, y).detach()
             loss = loss_l1 + LAMBDA_PERC * loss_perc
 
             val_loss += loss.item()
@@ -100,6 +108,11 @@ for epoch in range(1, EPOCHS + 1):
     val_loss /= len(val_dl)
     val_psnr /= len(val_dl)
     val_ssim /= len(val_dl)
+
+    train_losses.append(train_loss)
+    val_losses.append(val_loss)
+    val_psnrs.append(val_psnr)
+    val_ssims.append(val_ssim)
 
     print(
         f"Epoch {epoch:02d} | "
@@ -113,3 +126,7 @@ for epoch in range(1, EPOCHS + 1):
         model.state_dict(),
         os.path.join(CKPT_DIR, f"unet_epoch_{epoch}.pt")
     )
+np.save("/content/drive/MyDrive/oneformer/plots/train_loss.npy", train_losses)
+np.save("/content/drive/MyDrive/oneformer/plots/val_loss.npy", val_losses)
+np.save("/content/drive/MyDrive/oneformer/plots/val_psnr.npy", val_psnrs)
+np.save("/content/drive/MyDrive/oneformer/plots/val_ssim.npy", val_ssims)
