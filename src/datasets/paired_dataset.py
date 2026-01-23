@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 from PIL import Image
 import os
 import torchvision.transforms as T
+import numpy as np
 
 
 class PairedImageDataset(Dataset):
