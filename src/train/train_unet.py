@@ -39,6 +39,10 @@ val_ds = PairedImageDataset(
 train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
 val_dl = DataLoader(val_ds,   batch_size=BATCH_SIZE, shuffle=False)
 
+print("Train samples:", len(train_ds))
+print("Val samples:", len(val_ds))
+
+
 # -------- models --------
 segmenter = OneFormerWrapper(device=DEVICE)   # frozen
 model = UNet(in_channels=6, out_channels=3).to(DEVICE)
