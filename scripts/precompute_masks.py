@@ -33,4 +33,5 @@ for fname in tqdm(os.listdir(IMG_DIR)):
     masks = build_region_masks(seg, id2label, SEMANTIC_GROUPS)
     stacked = np.stack([m.cpu().numpy() for m in masks.values()], axis=0)
 
-    np.save(os.path.join(OUT_DIR, fname.replace(".jpg", ".npy")), stacked)
+    np.save(os.path.join(OUT_DIR, os.path.splitext(
+        fname)[0] + ".npy"), stacked)
