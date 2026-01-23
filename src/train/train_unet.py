@@ -1,22 +1,16 @@
 import os
 import torch
-from torch.utils.data import DataLoader
 from torch import nn
-from torchvision import transforms as T
+from torch.utils.data import DataLoader
 
 from src.models.unet import UNet
 from src.datasets.paired_dataset import PairedImageDataset
-from src.utils.concat_inputs import concat_image_and_masks
-from src.models.oneformer_wrapper import OneFormerWrapper
-from src.utils.region_masks import build_region_masks
-
 from src.utils.metrics import psnr, ssim
 
-# -------- config --------
-
+# ---------------- config ----------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-EPOCHS = 50
+EPOCHS = 20
 BATCH_SIZE = 4
 LR = 1e-4
 IMG_SIZE = (512, 512)
@@ -24,125 +18,87 @@ IMG_SIZE = (512, 512)
 CKPT_DIR = "outputs/checkpoints"
 os.makedirs(CKPT_DIR, exist_ok=True)
 
-SEMANTIC_GROUPS = {
-    "human": ["person"],
-    "vegetation": ["plant", "tree"],
-    "structure": ["wall", "building"],
-}
-
-# -------- data --------
+# ---------------- data ----------------
 train_ds = PairedImageDataset(
-    "data/train/input",
-    "data/train/target",
-    "/content/drive/MyDrive/oneformer_masks/train",
-    size=IMG_SIZE
+    input_dir="data/train/input",
+    target_dir="data/train/target",
+    mask_dir="/content/drive/MyDrive/oneformer_masks/train",
+    size=IMG_SIZE,
 )
-
-x, y = train_ds[0]
-print(x.shape)  # should be [6, H, W]
 
 val_ds = PairedImageDataset(
-    "data/val/input",
-    "data/val/target",
-    "data/val/masks",
-    size=IMG_SIZE
+    input_dir="data/val/input",
+    target_dir="data/val/target",
+    mask_dir="/content/drive/MyDrive/oneformer_masks/val",
+    size=IMG_SIZE,
 )
 
-train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
-val_dl = DataLoader(val_ds,   batch_size=BATCH_SIZE, shuffle=False)
+train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE,
+                      shuffle=True, num_workers=2)
+val_dl = DataLoader(val_ds,   batch_size=BATCH_SIZE,
+                    shuffle=False, num_workers=2)
 
 print("Train samples:", len(train_ds))
 print("Val samples:", len(val_ds))
 
-
-# -------- models --------
-segmenter = OneFormerWrapper(device=DEVICE)   # frozen
+# ---------------- model ----------------
 model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 
-opt = torch.optim.Adam(model.parameters(), lr=LR)
+optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 loss_fn = nn.L1Loss()
-to_tensor = T.ToTensor()
 
-# -------- train --------
+# ---------------- training ----------------
 for epoch in range(1, EPOCHS + 1):
+
+    # ---- train ----
     model.train()
     train_loss = 0.0
 
-    for inp_img, tgt_img in train_dl:
-        inp_img = inp_img.to(DEVICE)
-        tgt_img = tgt_img.to(DEVICE)
+    for x, y in train_dl:
+        x = x.to(DEVICE)      # (B, 6, H, W)
+        y = y.to(DEVICE)      # (B, 3, H, W)
 
-        # build region-aware input per image
-        inputs = []
-        for i in range(inp_img.size(0)):
-            pil = T.ToPILImage()(inp_img[i].cpu())
-            seg = segmenter.predict(pil)
-            id2label = segmenter.model.config.id2label
-            masks = build_region_masks(
-                seg, id2label, SEMANTIC_GROUPS)
-            x = concat_image_and_masks(inp_img[i], masks)
-            inputs.append(x)
-
-        x = torch.stack(inputs).to(DEVICE)
-
-        opt.zero_grad()
+        optimizer.zero_grad()
         out = model(x)
-
-        # crop target to output size (safe)
-        _, _, h, w = out.shape
-        loss = loss_fn(out, tgt_img[:, :, :h, :w])
+        loss = loss_fn(out, y)
         loss.backward()
-        opt.step()
+        optimizer.step()
 
         train_loss += loss.item()
 
-    train_loss /= max(1, len(train_dl))
+    train_loss /= len(train_dl)
 
-    # -------- val --------
+    # ---- validation ----
     model.eval()
     val_loss = 0.0
     val_psnr = 0.0
     val_ssim = 0.0
 
     with torch.no_grad():
-        for inp_img, tgt_img in val_dl:
-            inp_img = inp_img.to(DEVICE)
-            tgt_img = tgt_img.to(DEVICE)
+        for x, y in val_dl:
+            x = x.to(DEVICE)
+            y = y.to(DEVICE)
 
-            inputs = []
-            for i in range(inp_img.size(0)):
-                pil = T.ToPILImage()(inp_img[i].cpu())
-                seg = segmenter.predict(pil)
-                id2label = segmenter.model.config.id2label
-                masks = build_region_masks(seg, id2label, SEMANTIC_GROUPS)
-                x = concat_image_and_masks(inp_img[i], masks)
-                inputs.append(x)
-
-            x = torch.stack(inputs).to(DEVICE)
             out = model(x)
+            loss = loss_fn(out, y)
 
-            _, _, h, w = out.shape
-            tgt_c = tgt_img[:, :, :h, :w]
-
-            loss = loss_fn(out, tgt_c)
             val_loss += loss.item()
+            val_psnr += psnr(out, y).item()
+            val_ssim += ssim(out, y).item()
 
-            val_psnr += psnr(out, tgt_c).item()
-            val_ssim += ssim(out, tgt_c).item()
-
-    # ⬅️ AFTER the loop (this is key)
-    val_loss /= max(1, len(val_dl))
-    val_psnr /= max(1, len(val_dl))
-    val_ssim /= max(1, len(val_dl))
+    val_loss /= len(val_dl)
+    val_psnr /= len(val_dl)
+    val_ssim /= len(val_dl)
 
     print(
-        f"Epoch {epoch}: "
-        f"train={train_loss:.4f}, "
-        f"val={val_loss:.4f}, "
-        f"PSNR={val_psnr:.2f}, "
+        f"Epoch {epoch:02d} | "
+        f"train={train_loss:.4f} | "
+        f"val={val_loss:.4f} | "
+        f"PSNR={val_psnr:.2f} | "
         f"SSIM={val_ssim:.4f}"
     )
 
-    val_loss /= max(1, len(val_dl))
-
-    torch.save(model.state_dict(), f"{CKPT_DIR}/unet_epoch_{epoch}.pt")
+    torch.save(
+        model.state_dict(),
+        os.path.join(CKPT_DIR, f"unet_epoch_{epoch}.pt")
+    )
