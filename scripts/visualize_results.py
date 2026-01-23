@@ -10,7 +10,8 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # paths
 CKPT = "/content/drive/MyDrive/checkpoints/unet_epoch_20.pt"
-OUT_DIR = "outputs/visuals"
+OUT_DIR = "/content/drive/MyDrive/oneformer/outputs/visuals"
+
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # dataset
