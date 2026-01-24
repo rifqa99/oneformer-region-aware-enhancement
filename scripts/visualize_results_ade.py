@@ -9,8 +9,8 @@ from src.datasets.ade_enhance_dataset import ADEEnhancementDataset
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ================= paths =================
-CKPT = "/content/drive/MyDrive/checkpoints/unet_epoch_18.pt"  # BEST epoch
-OUT_DIR = "/content/drive/MyDrive/oneformer/outputs/visuals"
+CKPT = "/content/drive/MyDrive/checkpoints_ade/unet_epoch_18.pt"  # BEST epoch
+OUT_DIR = "/content/drive/MyDrive/oneformer_ade/outputs/visuals"
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
