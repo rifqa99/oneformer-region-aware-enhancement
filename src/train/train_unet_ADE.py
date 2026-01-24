@@ -43,10 +43,10 @@ print("Val samples:", len(val_ds))
 # ===================== MODEL =====================
 model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 model.load_state_dict(
-    torch.load("/content/drive/MyDrive/checkpoints_ade/unet_epoch_12.pt",
+    torch.load("/content/drive/MyDrive/checkpoints_ade/unet_epoch_11.pt",
                map_location=DEVICE)
 )
-print("Resumed from epoch 12")
+print("Resumed from epoch 11")
 
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 l1_loss = nn.L1Loss()
