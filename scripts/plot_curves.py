@@ -5,8 +5,8 @@ base = "/content/drive/MyDrive/oneformer/plots/base"
 ours = "/content/drive/MyDrive/oneformer/plots/ours"
 
 plt.figure()
-plt.plot(np.load(f"{base}/val_loss.npy"), label="Baseline")
-plt.plot(np.load(f"{ours}/val_loss_baseline.npy"), label="Region-aware")
+plt.plot(np.load(f"{base}/val_loss_baseline.npy"), label="Baseline")
+plt.plot(np.load(f"{ours}/val_loss.npy"), label="Region-aware")
 plt.title("Validation Loss")
 plt.legend()
 plt.show()
