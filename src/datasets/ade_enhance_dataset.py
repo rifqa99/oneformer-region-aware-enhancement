@@ -1,0 +1,42 @@
+import os
+from glob import glob
+import cv2
+import torch
+from torch.utils.data import Dataset
+
+
+class ADEEnhancementDataset(Dataset):
+    def __init__(self, root, split="train"):
+        """root: /content/Dataset
+        split: train | val | test  """
+
+        self.split = split
+        self.input_dir = os.path.join(root, split, "input")
+        self.target_dir = os.path.join(root, split, "target")
+        self.seg_dir = os.path.join(root, split, "seg")
+
+        self.inputs = sorted(glob(os.path.join(self.input_dir, "*.png")))
+        self.targets = sorted(glob(os.path.join(self.target_dir, "*.png")))
+
+        if split != "test":
+            self.segs = sorted(glob(os.path.join(self.seg_dir, "*.png")))
+        else:
+            self.segs = None
+
+    def __len__(self):
+        return len(self.inputs)
+
+    def __getitem__(self, idx):
+        # read images
+        inp = cv2.imread(self.inputs[idx])[:, :, ::-1]   # BGR → RGB
+        tgt = cv2.imread(self.targets[idx])[:, :, ::-1]
+
+        inp = torch.from_numpy(inp).permute(2, 0, 1).float() / 255.0
+        tgt = torch.from_numpy(tgt).permute(2, 0, 1).float() / 255.0
+
+        if self.split != "test":
+            seg = cv2.imread(self.segs[idx], cv2.IMREAD_GRAYSCALE)
+            seg = torch.from_numpy(seg).long()  # [H, W]
+            return inp, seg, tgt
+        else:
+            return inp, tgt
