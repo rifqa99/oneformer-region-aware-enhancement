@@ -33,8 +33,8 @@ class ADEEnhancementDataset(Dataset):
         base = os.path.basename(inp_path).split("_")[0] + ".png"
         tgt_path = os.path.join(self.target_dir, base)
 
-        inp = cv2.imread(inp_path)[:, :, ::-1]
-        tgt = cv2.imread(tgt_path)[:, :, ::-1]
+        inp = cv2.imread(inp_path)[:, :, ::-1].copy()
+        tgt = cv2.imread(tgt_path)[:, :, ::-1].copy()
 
         inp = torch.from_numpy(inp).permute(2, 0, 1).float() / 255.0
         tgt = torch.from_numpy(tgt).permute(2, 0, 1).float() / 255.0
