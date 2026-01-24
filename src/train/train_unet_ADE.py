@@ -34,6 +34,8 @@ train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True,
 
 val_dl = DataLoader(val_ds, batch_size=BATCH_SIZE, shuffle=False,
                     num_workers=2, pin_memory=True)
+inp, seg, tgt = next(iter(train_dl))
+print(inp.shape, seg.shape, tgt.shape)
 
 print("Train samples:", len(train_ds))
 print("Val samples:", len(val_ds))
