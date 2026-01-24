@@ -43,7 +43,7 @@ print("Val samples:", len(val_ds))
 # ===================== MODEL =====================
 model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 model.load_state_dict(
-    torch.load("/content/drive/MyDrive/checkpoints_ade/unet_epoch_04.pt",
+    torch.load("/content/drive/MyDrive/checkpoints_ade/unet_epoch_4.pt",
                map_location=DEVICE)
 )
 print("Resumed from epoch 4")
