@@ -33,27 +33,35 @@ class ADEEnhancementDataset(Dataset):
     def __getitem__(self, idx):
         inp_path = self.inputs[idx]
 
-        # extract base id: 0001_2.png → 0001.png
+        # map 0001_2.png → 0001.png
         base = os.path.basename(inp_path).split("_")[0] + ".png"
         tgt_path = os.path.join(self.target_dir, base)
 
-        inp = cv2.cvtColor(cv2.imread(inp_path), cv2.COLOR_BGR2RGB)
-        tgt = cv2.cvtColor(cv2.imread(tgt_path), cv2.COLOR_BGR2RGB)
-
+        # ---------- input (RGB) ----------
+        inp = cv2.imread(inp_path)
+        inp = cv2.cvtColor(inp, cv2.COLOR_BGR2RGB)
         inp = cv2.resize(inp, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
-        tgt = cv2.resize(tgt, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
+        inp = torch.from_numpy(inp).permute(
+            2, 0, 1).float() / 255.0   # (3,H,W)
 
-        inp = torch.from_numpy(inp).permute(2, 0, 1).float() / 255.0
-        tgt = torch.from_numpy(tgt).permute(2, 0, 1).float() / 255.0
+        # ---------- target (RGB) ----------
+        tgt = cv2.imread(tgt_path)
+        tgt = cv2.cvtColor(tgt, cv2.COLOR_BGR2RGB)
+        tgt = cv2.resize(tgt, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
+        tgt = torch.from_numpy(tgt).permute(
+            2, 0, 1).float() / 255.0   # (3,H,W)
 
         if self.split != "test":
+            # ---------- segmentation (single channel) ----------
             seg_path = os.path.join(self.seg_dir, base)
             seg = cv2.imread(seg_path, cv2.IMREAD_GRAYSCALE)
             if seg is None:
                 raise FileNotFoundError(f"Missing seg file: {seg_path}")
 
             seg = cv2.resize(seg, IMG_SIZE, interpolation=cv2.INTER_NEAREST)
-            return inp, tgt, seg
+            seg = torch.from_numpy(seg).long()                          # (H,W)
+
+            return inp, seg, tgt   # ✅ ORDER MATTERS
         else:
             return inp, tgt
 
