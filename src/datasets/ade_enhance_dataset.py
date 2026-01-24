@@ -66,7 +66,7 @@ class ADEEnhancementDataset(Dataset):
             return inp, tgt
 
 
-ds = ADEEnhancementDataset("/content/Dataset", split="train")
+ds = ADEEnhancementDataset("/content/Datasets", split="train")
 dl = DataLoader(ds, batch_size=2, shuffle=True)
 
 x, seg, y = next(iter(dl))
