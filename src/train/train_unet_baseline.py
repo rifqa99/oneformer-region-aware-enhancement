@@ -11,6 +11,7 @@ from src.utils.perceptual_loss import VGGPerceptualLoss
 
 # ---------------- config ----------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+print("using device:", DEVICE)
 
 EPOCHS = 20
 BATCH_SIZE = 4
