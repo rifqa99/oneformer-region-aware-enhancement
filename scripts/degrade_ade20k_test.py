@@ -7,8 +7,8 @@ from glob import glob
 # PATHS
 # ======================
 SRC_DIR = "/root/.cache/kagglehub/datasets/awsaf49/ade20k-dataset/versions/2/ADEChallengeData2016/images/validation"
-OUT_INPUT = "Dataset/validation/input"
-OUT_TARGET = "Dataset/validation/target"
+OUT_INPUT = "Dataset/test/input"
+OUT_TARGET = "Dataset/test/target"
 
 os.makedirs(OUT_INPUT, exist_ok=True)
 os.makedirs(OUT_TARGET, exist_ok=True)
@@ -41,7 +41,7 @@ def jpeg_compress(img, quality=30):
 # MAIN LOOP
 # ======================
 images = glob(os.path.join(SRC_DIR, "*.jpg"))
-images = images[:100]   # use only first 100 images
+images = images[100:200]   # use only first 100 images
 
 
 idx = 0
