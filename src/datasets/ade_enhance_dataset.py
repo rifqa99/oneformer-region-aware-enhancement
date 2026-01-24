@@ -68,6 +68,3 @@ class ADEEnhancementDataset(Dataset):
 
 ds = ADEEnhancementDataset("/content/Datasets", split="train")
 dl = DataLoader(ds, batch_size=2, shuffle=True)
-
-x, seg, y = next(iter(dl))
-print(x.shape, seg.shape, y.shape)
