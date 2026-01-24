@@ -27,16 +27,22 @@ class ADEEnhancementDataset(Dataset):
         return len(self.inputs)
 
     def __getitem__(self, idx):
-        # read images
-        inp = cv2.imread(self.inputs[idx])[:, :, ::-1]   # BGR → RGB
-        tgt = cv2.imread(self.targets[idx])[:, :, ::-1]
+        inp_path = self.inputs[idx]
+
+        # extract base id: 0001_2.png → 0001.png
+        base = os.path.basename(inp_path).split("_")[0] + ".png"
+        tgt_path = os.path.join(self.target_dir, base)
+
+        inp = cv2.imread(inp_path)[:, :, ::-1]
+        tgt = cv2.imread(tgt_path)[:, :, ::-1]
 
         inp = torch.from_numpy(inp).permute(2, 0, 1).float() / 255.0
         tgt = torch.from_numpy(tgt).permute(2, 0, 1).float() / 255.0
 
         if self.split != "test":
-            seg = cv2.imread(self.segs[idx], cv2.IMREAD_GRAYSCALE)
-            seg = torch.from_numpy(seg).long()  # [H, W]
+            seg_path = os.path.join(self.seg_dir, base)
+            seg = cv2.imread(seg_path, cv2.IMREAD_GRAYSCALE)
+            seg = torch.from_numpy(seg).long()
             return inp, seg, tgt
         else:
             return inp, tgt
