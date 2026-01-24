@@ -12,7 +12,7 @@ from src.utils.perceptual_loss import VGGPerceptualLoss
 # ===================== CONFIG =====================
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using device:", DEVICE)
-START_EPOCH = 8
+START_EPOCH = 12
 EPOCHS = 20
 BATCH_SIZE = 16
 LR = 1e-4
@@ -46,7 +46,7 @@ model.load_state_dict(
     torch.load("/content/drive/MyDrive/checkpoints_ade/unet_epoch_7.pt",
                map_location=DEVICE)
 )
-print("Resumed from epoch 7")
+print("Resumed from epoch 12")
 
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 l1_loss = nn.L1Loss()
@@ -77,7 +77,7 @@ def build_x(inp, seg):
 
 
 # ===================== TRAINING =====================
-for epoch in range(START_EPOCH, EPOCHS - START_EPOCH + 1):
+for epoch in range(START_EPOCH, EPOCHS + 1):
 
     # -------- TRAIN --------
     model.train()
