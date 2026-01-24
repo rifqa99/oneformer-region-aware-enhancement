@@ -41,7 +41,7 @@ def jpeg_compress(img, quality=30):
 # MAIN LOOP
 # ======================
 images = glob(os.path.join(SRC_DIR, "*.jpg"))
-images = images[:600]   # use only first 600 images
+images = images[:100]   # use only first 100 images
 
 
 idx = 0
