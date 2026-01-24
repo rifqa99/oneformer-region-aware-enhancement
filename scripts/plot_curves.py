@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-base = "/content/drive/MyDrive/oneformer/plots/base"
-ours = "/content/drive/MyDrive/oneformer/plots/ours"
+base = "/content/drive/MyDrive/oneformer_ade/plots/base"
+ours = "/content/drive/MyDrive/oneformer_ade/plots/ours"
 
 plt.figure()
 plt.plot(np.load(f"{base}/val_loss_baseline.npy"), label="Baseline")
