@@ -44,8 +44,10 @@ class ADEEnhancementDataset(Dataset):
         tgt = cv2.resize(tgt, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
 
         if self.split != "test":
+            seg_path = os.path.join(self.seg_dir, base)
             seg = cv2.imread(seg_path, cv2.IMREAD_GRAYSCALE)
             seg = cv2.resize(seg, IMG_SIZE, interpolation=cv2.INTER_NEAREST)
+            return inp, tgt, seg
         else:
             return inp, tgt
 
