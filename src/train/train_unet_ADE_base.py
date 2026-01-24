@@ -14,7 +14,7 @@ print("Using device:", DEVICE)
 
 START_EPOCH = 1
 EPOCHS = 20
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 LR = 1e-4
 
 CKPT_DIR = "/content/drive/MyDrive/checkpoints_ade_baseline"
