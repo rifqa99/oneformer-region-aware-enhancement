@@ -8,7 +8,7 @@ from src.models.unet import UNet
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print("using device:", DEVICE)
 # paths
-CKPT = "/content/drive/MyDrive/checkpoints/unet_epoch_18.pt"
+CKPT = "/content/drive/MyDrive/checkpoints_ade/unet_epoch_18.pt"
 
 model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 model.load_state_dict(torch.load(CKPT, map_location=DEVICE))
