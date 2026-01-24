@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 from src.models.unet import UNet
 from src.datasets.paired_dataset_rgb import PairedImageDatasetRGB
 from src.utils.metrics import psnr, ssim
-from src.utils.perceptual_loss import VGGPerceptualLoss
 
 # ---------------- config ----------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -23,8 +22,6 @@ os.makedirs(CKPT_DIR, exist_ok=True)
 
 os.makedirs("/content/drive/MyDrive/oneformer/plots", exist_ok=True)
 
-
-LAMBDA_PERC = 0.1
 
 # ---------------- data ----------------
 train_ds = PairedImageDatasetRGB(
@@ -52,7 +49,6 @@ model = UNet(in_channels=3, out_channels=3).to(DEVICE)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 l1_loss = nn.L1Loss()
-perc_loss = VGGPerceptualLoss(device=DEVICE)
 
 # ---------------- for the graph -------------
 train_losses, val_losses = [], []
@@ -73,9 +69,6 @@ for epoch in range(1, EPOCHS + 1):
         out = model(x)
 
         loss_l1 = l1_loss(out, y)
-        loss_perc = perc_loss(out, y)
-        loss = loss_l1 + LAMBDA_PERC * loss_perc
-
         loss.backward()
         optimizer.step()
 
@@ -97,8 +90,6 @@ for epoch in range(1, EPOCHS + 1):
             out = model(x)
 
             loss_l1 = l1_loss(out, y)
-            loss_perc = perc_loss(out, y).detach()
-            loss = loss_l1 + LAMBDA_PERC * loss_perc
 
             val_loss += loss.item()
             val_psnr += psnr(out, y).item()
