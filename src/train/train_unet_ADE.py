@@ -123,4 +123,23 @@ for epoch in range(1, EPOCHS + 1):
     train_losses.append(train_loss)
     val_losses.append(val_loss)
     val_psnrs.append(val_psnr)
-    val_ss_
+    val_ssims.append(val_ssim)
+
+    print(
+        f"Epoch {epoch:02d} | "
+        f"train={train_loss:.4f} | "
+        f"val={val_loss:.4f} | "
+        f"PSNR={val_psnr:.2f} | "
+        f"SSIM={val_ssim:.4f}"
+    )
+
+    torch.save(
+        model.state_dict(),
+        os.path.join(CKPT_DIR, f"unet_epoch_{epoch}.pt")
+    )
+
+# ===================== SAVE CURVES =====================
+np.save(os.path.join(PLOT_DIR, "train_loss.npy"), train_losses)
+np.save(os.path.join(PLOT_DIR, "val_loss.npy"), val_losses)
+np.save(os.path.join(PLOT_DIR, "val_psnr.npy"), val_psnrs)
+np.save(os.path.join(PLOT_DIR, "val_ssim.npy"), val_ssims)
