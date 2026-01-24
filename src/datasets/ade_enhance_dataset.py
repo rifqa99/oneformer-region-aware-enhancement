@@ -1,3 +1,5 @@
+from src.datasets.ade_enhance_dataset import ADEEnhancementDataset
+from torch.utils.data import DataLoader
 import os
 from glob import glob
 import cv2
@@ -46,3 +48,10 @@ class ADEEnhancementDataset(Dataset):
             return inp, seg, tgt
         else:
             return inp, tgt
+
+
+ds = ADEEnhancementDataset("/content/Dataset", split="train")
+dl = DataLoader(ds, batch_size=2, shuffle=True)
+
+x, seg, y = next(iter(dl))
+print(x.shape, seg.shape, y.shape)
