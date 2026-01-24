@@ -33,7 +33,7 @@ train_ds = ADEEnhancementDataset(
 
 val_ds = ADEEnhancementDataset(
     root="/content/Dataset",
-    split="val"
+    split="validation"
 )
 
 
