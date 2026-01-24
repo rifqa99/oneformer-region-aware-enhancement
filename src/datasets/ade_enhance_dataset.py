@@ -43,6 +43,9 @@ class ADEEnhancementDataset(Dataset):
         inp = cv2.resize(inp, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
         tgt = cv2.resize(tgt, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
 
+        inp = torch.from_numpy(inp).permute(2, 0, 1).float() / 255.0
+        tgt = torch.from_numpy(tgt).permute(2, 0, 1).float() / 255.0
+
         if self.split != "test":
             seg_path = os.path.join(self.seg_dir, base)
             seg = cv2.imread(seg_path, cv2.IMREAD_GRAYSCALE)
