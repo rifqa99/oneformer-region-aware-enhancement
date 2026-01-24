@@ -13,7 +13,7 @@ from src.utils.perceptual_loss import VGGPerceptualLoss
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 EPOCHS = 20
-BATCH_SIZE = 4
+BATCH_SIZE = 32
 LR = 1e-4
 IMG_SIZE = (512, 512)
 
