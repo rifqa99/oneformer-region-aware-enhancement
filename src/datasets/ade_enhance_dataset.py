@@ -6,6 +6,8 @@ import cv2
 import torch
 from torch.utils.data import Dataset
 
+IMG_SIZE = (512, 512)  # (W, H)
+
 
 class ADEEnhancementDataset(Dataset):
     def __init__(self, root, split="train"):
@@ -38,14 +40,12 @@ class ADEEnhancementDataset(Dataset):
         inp = cv2.cvtColor(cv2.imread(inp_path), cv2.COLOR_BGR2RGB)
         tgt = cv2.cvtColor(cv2.imread(tgt_path), cv2.COLOR_BGR2RGB)
 
-        inp = torch.from_numpy(inp).permute(2, 0, 1).float() / 255.0
-        tgt = torch.from_numpy(tgt).permute(2, 0, 1).float() / 255.0
+        inp = cv2.resize(inp, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
+        tgt = cv2.resize(tgt, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
 
         if self.split != "test":
-            seg_path = os.path.join(self.seg_dir, base)
             seg = cv2.imread(seg_path, cv2.IMREAD_GRAYSCALE)
-            seg = torch.from_numpy(seg).long()
-            return inp, seg, tgt
+            seg = cv2.resize(seg, IMG_SIZE, interpolation=cv2.INTER_NEAREST)
         else:
             return inp, tgt
 
