@@ -69,6 +69,7 @@ for epoch in range(1, EPOCHS + 1):
         out = model(x)
 
         loss_l1 = l1_loss(out, y)
+        loss = loss_l1
         loss.backward()
         optimizer.step()
 
@@ -90,6 +91,7 @@ for epoch in range(1, EPOCHS + 1):
             out = model(x)
 
             loss_l1 = l1_loss(out, y)
+            loss = loss_l1
 
             val_loss += loss.item()
             val_psnr += psnr(out, y).item()
