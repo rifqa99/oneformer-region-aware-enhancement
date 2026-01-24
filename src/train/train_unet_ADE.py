@@ -12,12 +12,12 @@ from src.utils.perceptual_loss import VGGPerceptualLoss
 # ===================== CONFIG =====================
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using device:", DEVICE)
-START_EPOCH = 5
+START_EPOCH = 8
 EPOCHS = 20
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 LR = 1e-4
 
-CKPT_DIR = "/content/drive/MyDrive/checkpoints"
+CKPT_DIR = "/content/drive/MyDrive/checkpoints_ade"
 PLOT_DIR = "/content/drive/MyDrive/oneformer_ade/plots"
 os.makedirs(CKPT_DIR, exist_ok=True)
 os.makedirs(PLOT_DIR, exist_ok=True)
@@ -43,10 +43,10 @@ print("Val samples:", len(val_ds))
 # ===================== MODEL =====================
 model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 model.load_state_dict(
-    torch.load("/content/drive/MyDrive/checkpoints_ade/unet_epoch_4.pt",
+    torch.load("/content/drive/MyDrive/checkpoints_ade/unet_epoch_7.pt",
                map_location=DEVICE)
 )
-print("Resumed from epoch 4")
+print("Resumed from epoch 7")
 
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 l1_loss = nn.L1Loss()
@@ -77,7 +77,7 @@ def build_x(inp, seg):
 
 
 # ===================== TRAINING =====================
-for epoch in range(START_EPOCH, EPOCHS + 1):
+for epoch in range(START_EPOCH, EPOCHS - START_EPOCH + 1):
 
     # -------- TRAIN --------
     model.train()
