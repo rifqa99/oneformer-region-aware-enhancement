@@ -11,7 +11,7 @@ from src.utils.perceptual_loss import VGGPerceptualLoss
 
 # ---------------- config ----------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
+print("using device:", DEVICE)
 EPOCHS = 20
 BATCH_SIZE = 4
 LR = 1e-4
@@ -20,7 +20,7 @@ IMG_SIZE = (512, 512)
 CKPT_DIR = "/content/drive/MyDrive/checkpoints"
 os.makedirs(CKPT_DIR, exist_ok=True)
 
-os.makedirs("/content/drive/MyDrive/oneformer/plots", exist_ok=True)
+os.makedirs("/content/drive/MyDrive/oneformer_ade/plots", exist_ok=True)
 
 
 LAMBDA_PERC = 0.1
@@ -129,7 +129,7 @@ for epoch in range(1, EPOCHS + 1):
         model.state_dict(),
         os.path.join(CKPT_DIR, f"unet_epoch_{epoch}.pt")
     )
-np.save("/content/drive/MyDrive/oneformer/plots/train_loss.npy", train_losses)
-np.save("/content/drive/MyDrive/oneformer/plots/val_loss.npy", val_losses)
-np.save("/content/drive/MyDrive/oneformer/plots/val_psnr.npy", val_psnrs)
-np.save("/content/drive/MyDrive/oneformer/plots/val_ssim.npy", val_ssims)
+np.save("/content/drive/MyDrive/oneformer_ade/plots/train_loss.npy", train_losses)
+np.save("/content/drive/MyDrive/oneformer_ade/plots/val_loss.npy", val_losses)
+np.save("/content/drive/MyDrive/oneformer_ade/plots/val_psnr.npy", val_psnrs)
+np.save("/content/drive/MyDrive/oneformer_ade/plots/val_ssim.npy", val_ssims)
