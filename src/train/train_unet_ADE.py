@@ -23,28 +23,17 @@ os.makedirs(CKPT_DIR, exist_ok=True)
 os.makedirs(PLOT_DIR, exist_ok=True)
 
 LAMBDA_PERC = 0.1
-
-# ===================== DATA =====================
 ROOT = "/content/Dataset"
 
+# ===================== DATA =====================
 train_ds = ADEEnhancementDataset(root=ROOT, split="train")
 val_ds = ADEEnhancementDataset(root=ROOT, split="val")
 
-train_dl = DataLoader(
-    train_ds,
-    batch_size=BATCH_SIZE,
-    shuffle=True,
-    num_workers=2,
-    pin_memory=True
-)
+train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True,
+                      num_workers=2, pin_memory=True)
 
-val_dl = DataLoader(
-    val_ds,
-    batch_size=BATCH_SIZE,
-    shuffle=False,
-    num_workers=2,
-    pin_memory=True
-)
+val_dl = DataLoader(val_ds, batch_size=BATCH_SIZE, shuffle=False,
+                    num_workers=2, pin_memory=True)
 
 print("Train samples:", len(train_ds))
 print("Val samples:", len(val_ds))
@@ -60,6 +49,26 @@ perc_loss = VGGPerceptualLoss(device=DEVICE)
 train_losses, val_losses = [], []
 val_psnrs, val_ssims = [], []
 
+# ===================== HELPERS =====================
+
+
+def build_x(inp, seg):
+    """
+    inp: (B,3,H,W)
+    seg: either (B,H,W) or (B,3,H,W)
+    returns x: (B,6,H,W)
+    """
+    if seg.dim() == 3:                 # (B,H,W)
+        seg = seg.unsqueeze(1)         # (B,1,H,W)
+        seg = seg.repeat(1, 3, 1, 1)   # (B,3,H,W)
+    elif seg.dim() == 4 and seg.size(1) == 1:
+        seg = seg.repeat(1, 3, 1, 1)   # (B,3,H,W)
+    # if seg is already (B,3,H,W), keep it
+
+    seg = seg.float() / 150.0
+    return torch.cat([inp, seg], dim=1)
+
+
 # ===================== TRAINING =====================
 for epoch in range(1, EPOCHS + 1):
 
@@ -70,12 +79,9 @@ for epoch in range(1, EPOCHS + 1):
     for inp, seg, tgt in train_dl:
         inp = inp.to(DEVICE)
         tgt = tgt.to(DEVICE)
-
-        seg = seg.unsqueeze(1).float() / 150.0          # (B,1,H,W)
-        seg = seg.float() / 150.0     # already (B,3,H,W)
         seg = seg.to(DEVICE)
 
-        x = torch.cat([inp, seg], dim=1)                # (B,6,H,W)
+        x = build_x(inp, seg)  # (B,6,H,W)
 
         optimizer.zero_grad()
         out = model(x)
@@ -90,6 +96,7 @@ for epoch in range(1, EPOCHS + 1):
         train_loss += loss.item()
 
     train_loss /= len(train_dl)
+    train_losses.append(train_loss)
 
     # -------- VALIDATION --------
     model.eval()
@@ -97,16 +104,18 @@ for epoch in range(1, EPOCHS + 1):
     val_psnr = 0.0
     val_ssim = 0.0
 
+    if len(val_ds) == 0:
+        print(
+            f"Epoch {epoch:02d} | train={train_loss:.4f} | val=SKIPPED (val_ds is empty)")
+        continue
+
     with torch.no_grad():
         for inp, seg, tgt in val_dl:
             inp = inp.to(DEVICE)
             tgt = tgt.to(DEVICE)
-
-            seg = seg.unsqueeze(1).float() / 150.0
-            seg = seg.float() / 150.0     # already (B,3,H,W)
             seg = seg.to(DEVICE)
 
-            x = torch.cat([inp, seg], dim=1)
+            x = build_x(inp, seg)
 
             out = model(x)
 
@@ -122,7 +131,6 @@ for epoch in range(1, EPOCHS + 1):
     val_psnr /= len(val_dl)
     val_ssim /= len(val_dl)
 
-    train_losses.append(train_loss)
     val_losses.append(val_loss)
     val_psnrs.append(val_psnr)
     val_ssims.append(val_ssim)
@@ -135,10 +143,8 @@ for epoch in range(1, EPOCHS + 1):
         f"SSIM={val_ssim:.4f}"
     )
 
-    torch.save(
-        model.state_dict(),
-        os.path.join(CKPT_DIR, f"unet_epoch_{epoch}.pt")
-    )
+    torch.save(model.state_dict(), os.path.join(
+        CKPT_DIR, f"unet_epoch_{epoch}.pt"))
 
 # ===================== SAVE CURVES =====================
 np.save(os.path.join(PLOT_DIR, "train_loss.npy"), train_losses)
