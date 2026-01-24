@@ -13,14 +13,14 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print("using device:", DEVICE)
 
 EPOCHS = 20
-BATCH_SIZE = 4
+BATCH_SIZE = 32
 LR = 1e-4
 IMG_SIZE = (512, 512)
 
 CKPT_DIR = "/content/drive/MyDrive/checkpoints_baseline"
 os.makedirs(CKPT_DIR, exist_ok=True)
 
-os.makedirs("/content/drive/MyDrive/oneformer/plots", exist_ok=True)
+os.makedirs("/content/drive/MyDrive/oneformer/plots_LOL_baseline", exist_ok=True)
 
 
 # ---------------- data ----------------
