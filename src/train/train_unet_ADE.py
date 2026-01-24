@@ -72,7 +72,8 @@ for epoch in range(1, EPOCHS + 1):
         tgt = tgt.to(DEVICE)
 
         seg = seg.unsqueeze(1).float() / 150.0          # (B,1,H,W)
-        seg = seg.repeat(1, 3, 1, 1).to(DEVICE)         # (B,3,H,W)
+        seg = seg.float() / 150.0     # already (B,3,H,W)
+        seg = seg.to(DEVICE)
 
         x = torch.cat([inp, seg], dim=1)                # (B,6,H,W)
 
@@ -102,7 +103,8 @@ for epoch in range(1, EPOCHS + 1):
             tgt = tgt.to(DEVICE)
 
             seg = seg.unsqueeze(1).float() / 150.0
-            seg = seg.repeat(1, 3, 1, 1).to(DEVICE)
+            seg = seg.float() / 150.0     # already (B,3,H,W)
+            seg = seg.to(DEVICE)
 
             x = torch.cat([inp, seg], dim=1)
 
