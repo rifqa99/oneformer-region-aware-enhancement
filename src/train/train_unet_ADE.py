@@ -54,8 +54,8 @@ val_dl = DataLoader(val_ds,   batch_size=8, shuffle=False, num_workers=2)
 model = UNet(in_channels=3 + 3, out_channels=3).to(DEVICE)
 
 
-inp, seg, tgt = next(iter(train_dl))
-print(inp.shape, seg.shape, tgt.shape)
+x, y = next(iter(train_dl))
+print(x.shape, y.shape)
 
 print("Train samples:", len(train_ds))
 print("Val samples:", len(val_ds))
@@ -76,25 +76,6 @@ perc_loss = VGGPerceptualLoss(device=DEVICE)
 train_losses, val_losses = [], []
 val_psnrs, val_ssims = [], []
 
-# ===================== HELPERS =====================
-
-
-def build_x(inp, seg):
-    """
-    inp: (B,3,H,W)
-    seg: either (B,H,W) or (B,3,H,W)
-    returns x: (B,6,H,W)
-    """
-    if seg.dim() == 3:                 # (B,H,W)
-        seg = seg.unsqueeze(1)         # (B,1,H,W)
-        seg = seg.repeat(1, 3, 1, 1)   # (B,3,H,W)
-    elif seg.dim() == 4 and seg.size(1) == 1:
-        seg = seg.repeat(1, 3, 1, 1)   # (B,3,H,W)
-    # if seg is already (B,3,H,W), keep it
-
-    seg = seg.float() / 150.0
-    return torch.cat([inp, seg], dim=1)
-
 
 # ===================== TRAINING =====================
 for epoch in range(START_EPOCH, EPOCHS + 1):
@@ -103,24 +84,19 @@ for epoch in range(START_EPOCH, EPOCHS + 1):
     model.train()
     train_loss = 0.0
 
-    for inp, seg, tgt in train_dl:
-        inp = inp.to(DEVICE)
-        tgt = tgt.to(DEVICE)
-        seg = seg.to(DEVICE)
-
-        x = build_x(inp, seg)  # (B,6,H,W)
+    for x, y in train_dl:
+        x = x.to(DEVICE)   # (B, 6, H, W)
+        y = y.to(DEVICE)   # (B, 3, H, W)
 
         optimizer.zero_grad()
         out = model(x)
 
-        loss_l1 = l1_loss(out, tgt)
-        loss_perc = perc_loss(out, tgt)
+        loss_l1 = l1_loss(out, y)
+        loss_perc = perc_loss(out, y)
         loss = loss_l1 + LAMBDA_PERC * loss_perc
 
         loss.backward()
         optimizer.step()
-
-        train_loss += loss.item()
 
     train_loss /= len(train_dl)
     train_losses.append(train_loss)
@@ -135,24 +111,20 @@ for epoch in range(START_EPOCH, EPOCHS + 1):
         print(
             f"Epoch {epoch:02d} | train={train_loss:.4f} | val=SKIPPED (val_ds is empty)")
         continue
-
     with torch.no_grad():
-        for inp, seg, tgt in val_dl:
-            inp = inp.to(DEVICE)
-            tgt = tgt.to(DEVICE)
-            seg = seg.to(DEVICE)
-
-            x = build_x(inp, seg)
+        for x, y in val_dl:
+            x = x.to(DEVICE)
+            y = y.to(DEVICE)
 
             out = model(x)
 
-            loss_l1 = l1_loss(out, tgt)
-            loss_perc = perc_loss(out, tgt)
+            loss_l1 = l1_loss(out, y)
+            loss_perc = perc_loss(out, y)
             loss = loss_l1 + LAMBDA_PERC * loss_perc
 
             val_loss += loss.item()
-            val_psnr += psnr(out, tgt).item()
-            val_ssim += ssim(out, tgt).item()
+            val_psnr += psnr(out, y).item()
+            val_ssim += ssim(out, y).item()
 
     val_loss /= len(val_dl)
     val_psnr /= len(val_dl)
