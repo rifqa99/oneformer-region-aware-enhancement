@@ -30,7 +30,6 @@ def safe_plot(path, fname_base, fname_ours, title, ylabel, save_as):
     plt.tight_layout()
     plt.savefig(save_as, dpi=300)
     plt.show()
-    plt.close()
 
 
 safe_plot(ade_plots, "val_loss_baseline.npy", "val_loss.npy",
@@ -60,7 +59,6 @@ def plot_train_val(path, train_file, val_file, title, save_as):
     plt.tight_layout()
     plt.savefig(save_as, dpi=300)
     plt.show()
-    plt.close()
 
 
 # Baseline
