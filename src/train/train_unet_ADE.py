@@ -14,7 +14,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using device:", DEVICE)
 START_EPOCH = 1
 EPOCHS = 20
-BATCH_SIZE = 32
+BATCH_SIZE = 8
 LR = 1e-4
 
 CKPT_DIR = "/content/drive/MyDrive/checkpoints_ade"
