@@ -129,4 +129,4 @@ for epoch in range(1, EPOCHS + 1):
 np.save(os.path.join(PLOT_DIR, "train_loss.npy"), train_losses)
 np.save(os.path.join(PLOT_DIR, "val_loss.npy"), val_losses)
 np.save(os.path.join(PLOT_DIR, "val_psnr.npy"), val_psnrs)
-np.save(os.path.join(
+np.save(os.path.join(PLOT_DIR, "val_ssim.npy"), val_ssims)
