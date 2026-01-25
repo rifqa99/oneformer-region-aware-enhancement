@@ -1,4 +1,4 @@
-from src.datasets.paired_dataset import PairedImageDataset
+from src.datasets.PairedMaskDataset import PairedImageDataset
 from torch.utils.data import DataLoader
 from src.models.unet import UNet
 from src.utils.concat_inputs import concat_image_and_masks
