@@ -3,9 +3,9 @@ import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from src.datasets.paired_dataset_ade import ADEPairedMaskDataset
 
 from src.models.unet import UNet
-from src.datasets.ade_enhance_dataset import ADEEnhancementDataset
 from src.utils.metrics import psnr, ssim
 from src.utils.perceptual_loss import VGGPerceptualLoss
 
@@ -26,14 +26,34 @@ LAMBDA_PERC = 0.1
 ROOT = "/content/Datasets"
 
 # ===================== DATA =====================
-train_ds = ADEEnhancementDataset(root=ROOT, split="train")
-val_ds = ADEEnhancementDataset(root=ROOT, split="val")
+# train_ds = ADEEnhancementDataset(root=ROOT, split="train")
+# val_ds = ADEEnhancementDataset(root=ROOT, split="val")
 
-train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True,
-                      num_workers=2, pin_memory=True)
+# train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True,
+#                       num_workers=2, pin_memory=True)
 
-val_dl = DataLoader(val_ds, batch_size=BATCH_SIZE, shuffle=False,
-                    num_workers=2, pin_memory=True)
+# val_dl = DataLoader(val_ds, batch_size=BATCH_SIZE, shuffle=False,
+#                     num_workers=2, pin_memory=True)
+train_ds = ADEPairedMaskDataset(
+    input_dir="/content/Datasets/train/input",
+    target_dir="/content/Datasets/train/target",
+    mask_dir="/content/drive/MyDrive/ade20k_oneformer_masks/train",
+    size=(512, 512),
+)
+
+val_ds = ADEPairedMaskDataset(
+    input_dir="/content/Datasets/val/input",
+    target_dir="/content/Datasets/val/target",
+    mask_dir="/content/drive/MyDrive/ade20k_oneformer_masks/val",
+    size=(512, 512),
+)
+
+train_dl = DataLoader(train_ds, batch_size=8, shuffle=True, num_workers=2)
+val_dl = DataLoader(val_ds,   batch_size=8, shuffle=False, num_workers=2)
+
+model = UNet(in_channels=3 + 3, out_channels=3).to(DEVICE)
+
+
 inp, seg, tgt = next(iter(train_dl))
 print(inp.shape, seg.shape, tgt.shape)
 
@@ -41,7 +61,7 @@ print("Train samples:", len(train_ds))
 print("Val samples:", len(val_ds))
 
 # ===================== MODEL =====================
-model = UNet(in_channels=6, out_channels=3).to(DEVICE)
+# model = UNet(in_channels=6, out_channels=3).to(DEVICE)
 # model.load_state_dict(
 #     torch.load("/content/drive/MyDrive/checkpoints_ade/unet_epoch_11.pt",
 #                map_location=DEVICE)
